@@ -1,17 +1,42 @@
 <template>
-  <div class="min-h-screen flex justify-center items-center">
-    <div class="w-60 h-60 flex justify-center items-center bg-white mx-auto rounded-[20px]">
-      <qrcode-stream @camera-on="onReady"></qrcode-stream>
-
-    </div>
+  <div class="min-h-screen flex justify-center items-center flex-col gap-y-3">
+    {{ code }}
+    <Welcome v-if="step === 'welcome'" @click="step = 'scanQrCode'" />
+    <ScanQrCode v-else-if="step === 'scanQrCode'" @onClick="step = 'enterQrCode'" />
+    <EnterQrCode v-else-if="step === 'enterQrCode'" v-model="code" @onClick="onEnterCode" />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { QrcodeStream, QrcodeDropZone, QrcodeCapture } from 'vue-qrcode-reader'
+const router = useRouter();
+definePageMeta({
+  middleware: [
+    function (to, from) {
+      console.log(to);
+      const code = process.client && localStorage.getItem('code');
+      if(code){
+        return navigateTo('/verify')
+      }
+    },
+  ],
+})
 
-const onReady = () => {
 
+
+
+const code = ref<string>('')
+
+const onDecode = (decodedString: string) => {
+  console.log({ decodedString })
+}
+
+const step = ref<'welcome' | 'scanQrCode' | 'enterQrCode'>('welcome');
+
+
+const onEnterCode = () => {
+  if (!code.value) return
+  localStorage.setItem('code', JSON.stringify(code.value));
+  router.push('/verify')
 }
 </script>
 
